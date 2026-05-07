@@ -119,12 +119,6 @@ class TrayApp:
         menu.addAction(detail_action)
         menu.addSeparator()
 
-        # 重置统计
-        reset_action = QAction("重置今日统计", menu)
-        reset_action.triggered.connect(self._reset_stats)
-        menu.addAction(reset_action)
-        menu.addSeparator()
-
         # 退出
         quit_action = QAction("退出程序", menu)
         quit_action.triggered.connect(self._quit_app)
@@ -177,11 +171,6 @@ class TrayApp:
         self.detail_window.show()
         self.detail_window.raise_()
         self.detail_window.activateWindow()
-
-    def _reset_stats(self):
-        """重置统计"""
-        self.tracker.reset()
-        self._update_tray_icon()
 
     def _show_about(self):
         """显示关于对话框"""

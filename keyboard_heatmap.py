@@ -7,6 +7,14 @@ from PyQt5.QtGui import QPainter, QColor, QFont, QPen, QBrush, QMouseEvent, QLin
 import keyboard_layouts as kl
 
 
+THEME_COLORS = {
+    'light': {'text': '#0F172A', 'muted': '#64748B', 'panel': '#F8FAFC', 'border': '#E2E8F0', 'key': '#FFFFFF', 'key_border': '#D7DEE8', 'hover': '#2563EB', 'chip_bg': '#EFF6FF', 'chip_border': '#DBEAFE', 'chip_text': '#1D4ED8', 'empty_bg': '#FFFFFF'},
+    'dark': {'text': '#F8FAFC', 'muted': '#94A3B8', 'panel': '#1E293B', 'border': '#334155', 'key': '#111827', 'key_border': '#475569', 'hover': '#60A5FA', 'chip_bg': '#1E3A8A', 'chip_border': '#2563EB', 'chip_text': '#DBEAFE', 'empty_bg': '#111827'},
+    'blue': {'text': '#0F2A43', 'muted': '#52708D', 'panel': '#F0F7FF', 'border': '#CFE4FF', 'key': '#FFFFFF', 'key_border': '#BBD7F5', 'hover': '#1677FF', 'chip_bg': '#E6F4FF', 'chip_border': '#BAE0FF', 'chip_text': '#0958D9', 'empty_bg': '#FFFFFF'},
+    'green': {'text': '#052E16', 'muted': '#4B755D', 'panel': '#F0FDF4', 'border': '#BBF7D0', 'key': '#FFFFFF', 'key_border': '#86EFAC', 'hover': '#16A34A', 'chip_bg': '#DCFCE7', 'chip_border': '#86EFAC', 'chip_text': '#166534', 'empty_bg': '#FFFFFF'},
+}
+
+
 class KeyboardHeatmap(QWidget):
     """键盘热力图，支持 87/104 键布局、Top 按键摘要和图例。"""
 
@@ -33,12 +41,15 @@ class KeyboardHeatmap(QWidget):
         self._range_label = '今日'
         self._key_rects = []
         self._hovered_key = None
+        self._theme_name = 'light'
+        self._colors = THEME_COLORS['light']
 
         self.setMouseTracking(True)
         self.setMinimumSize(560, 360)
         self.setStyleSheet('background: transparent;')
 
         self._init_ui()
+        self.set_theme(self._theme_name)
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -77,6 +88,17 @@ class KeyboardHeatmap(QWidget):
         layout.addLayout(toolbar)
         layout.addStretch()
 
+    def set_theme(self, theme_name: str):
+        self._theme_name = theme_name if theme_name in THEME_COLORS else 'light'
+        self._colors = THEME_COLORS[self._theme_name]
+        self.title_label.setStyleSheet(
+            f"font-size: 17px; font-weight: 700; color: {self._colors['text']}; background: transparent;"
+        )
+        self.subtitle_label.setStyleSheet(
+            f"font-size: 12px; color: {self._colors['muted']}; background: transparent;"
+        )
+        self.update()
+
     def _switch_layout(self, layout_type: str):
         self._layout_type = layout_type
         self._layout = kl.get_layout_104() if layout_type == '104' else kl.get_layout_87()
@@ -113,7 +135,7 @@ class KeyboardHeatmap(QWidget):
 
     def _text_color_for(self, color: QColor, active: bool) -> QColor:
         if not active:
-            return QColor('#475569')
+            return QColor(self._colors['text'])
         return QColor('#FFFFFF') if color.lightness() < 128 else QColor('#111827')
 
     def _key_count(self, key_def: dict) -> int:
@@ -138,7 +160,7 @@ class KeyboardHeatmap(QWidget):
         num_cols = max_col - min_col
         margin = 18
         top_offset = 64
-        bottom_offset = 86
+        bottom_offset = 138
         paint_w = self.width() - margin * 2
         paint_h = self.height() - top_offset - bottom_offset
         key_unit = min(paint_w / num_cols, paint_h / num_rows)
@@ -174,8 +196,8 @@ class KeyboardHeatmap(QWidget):
 
     def _draw_panel_background(self, painter: QPainter, keyboard_rect: QRectF):
         bg = keyboard_rect.adjusted(-12, -12, 12, 12)
-        painter.setPen(QPen(QColor('#E2E8F0'), 1))
-        painter.setBrush(QColor('#F8FAFC'))
+        painter.setPen(QPen(QColor(self._colors['border']), 1))
+        painter.setBrush(QColor(self._colors['panel']))
         painter.drawRoundedRect(bg, 14, 14)
 
     def _draw_keys(self, painter: QPainter, min_row: float, min_col: float, key_unit: float, keyboard_rect: QRectF):
@@ -201,8 +223,8 @@ class KeyboardHeatmap(QWidget):
             painter.setBrush(QColor(0, 0, 0, 18 if hovered else 10))
             painter.drawRoundedRect(rect.adjusted(0, 1.8, 0, 1.8), self.CORNER_RADIUS, self.CORNER_RADIUS)
 
-            painter.setPen(QPen(QColor('#CBD5E1' if active else '#D7DEE8'), 1))
-            painter.setBrush(fill if active else QColor('#FFFFFF'))
+            painter.setPen(QPen(QColor(self._colors['border'] if active else self._colors['key_border']), 1))
+            painter.setBrush(fill if active else QColor(self._colors['key']))
             painter.drawRoundedRect(rect, self.CORNER_RADIUS, self.CORNER_RADIUS)
 
             if active:
@@ -212,7 +234,7 @@ class KeyboardHeatmap(QWidget):
                 painter.drawRoundedRect(inner, max(2, self.CORNER_RADIUS - 1), max(2, self.CORNER_RADIUS - 1))
 
             if hovered:
-                painter.setPen(QPen(QColor('#2563EB'), 2))
+                painter.setPen(QPen(QColor(self._colors['hover']), 2))
                 painter.setBrush(Qt.NoBrush)
                 painter.drawRoundedRect(rect.adjusted(-1, -1, 1, 1), self.CORNER_RADIUS + 1, self.CORNER_RADIUS + 1)
 
@@ -232,18 +254,18 @@ class KeyboardHeatmap(QWidget):
         w = 210
         h = 9
 
-        painter.setPen(QColor('#64748B'))
+        painter.setPen(QColor(self._colors['muted']))
         painter.setFont(QFont('Segoe UI', 9))
         painter.drawText(QRectF(x, y - 20, 260, 18), Qt.AlignLeft | Qt.AlignVCenter, '热度图例')
 
         gradient = QLinearGradient(x, y, x + w, y)
         for pos, color in self.HEAT_COLORS[1:]:
             gradient.setColorAt(pos, color)
-        painter.setPen(QPen(QColor('#CBD5E1'), 1))
+        painter.setPen(QPen(QColor(self._colors['border']), 1))
         painter.setBrush(QBrush(gradient))
         painter.drawRoundedRect(QRectF(x, y, w, h), 4, 4)
 
-        painter.setPen(QColor('#64748B'))
+        painter.setPen(QColor(self._colors['muted']))
         painter.setFont(QFont('Segoe UI', 8))
         painter.drawText(QRectF(x, y + 12, 40, 16), Qt.AlignLeft, '低频')
         painter.drawText(QRectF(x + w - 40, y + 12, 40, 16), Qt.AlignRight, '高频')
@@ -255,45 +277,60 @@ class KeyboardHeatmap(QWidget):
             if count > 0:
                 items.append((self._display_label(key_def), count))
         items.sort(key=lambda x: x[1], reverse=True)
-        top = items[:5]
+        top = items[:8]
 
-        x = self.width() - 300
-        y = self.height() - 72
-        painter.setPen(QColor('#64748B'))
-        painter.setFont(QFont('Segoe UI', 9))
-        title = '高频按键 Top 5'
+        x = 290
+        y = self.height() - 134
+        w = self.width() - x - 18
+        row_h = 14
+        label_w = 78
+        value_w = 62
+        bar_x = x + label_w
+        bar_w = max(80, w - label_w - value_w - 12)
+
+        painter.setPen(QColor(self._colors['muted']))
+        painter.setFont(QFont('Segoe UI', 9, QFont.Bold))
+        title = '高频按键 Top 8'
         if top:
             max_label, max_count = top[0]
             title = f'{title} · 最高 {max_label} {max_count:,} 次'
-        painter.drawText(QRectF(x, y, 282, 18), Qt.AlignLeft | Qt.AlignVCenter, title)
+        painter.drawText(QRectF(x, y, w, 18), Qt.AlignLeft | Qt.AlignVCenter, title)
 
         if not top:
-            painter.setPen(QColor('#94A3B8'))
-            painter.drawText(QRectF(x, y + 24, 282, 20), Qt.AlignLeft | Qt.AlignVCenter, '暂无按键数据')
+            painter.setPen(QColor(self._colors['muted']))
+            painter.setFont(QFont('Segoe UI', 9))
+            painter.drawText(QRectF(x, y + 24, w, 20), Qt.AlignLeft | Qt.AlignVCenter, '暂无高频按键数据')
             return
 
-        chip_x = x
-        chip_y = y + 24
+        max_count = top[0][1]
         painter.setFont(QFont('Segoe UI', 8))
-        for label, count in top:
-            text = f'{label} {count:,}'
-            chip_w = min(78, 34 + len(text) * 5)
-            rect = QRectF(chip_x, chip_y, chip_w, 22)
-            painter.setPen(QPen(QColor('#DBEAFE'), 1))
-            painter.setBrush(QColor('#EFF6FF'))
-            painter.drawRoundedRect(rect, 11, 11)
-            painter.setPen(QColor('#1D4ED8'))
-            painter.drawText(rect, Qt.AlignCenter, text)
-            chip_x += chip_w + 6
-            if chip_x > self.width() - 70:
-                break
+        for i, (label, count) in enumerate(top):
+            row_y = y + 24 + i * row_h
+            ratio = count / max_count if max_count else 0
+
+            painter.setPen(QColor(self._colors['text']))
+            painter.drawText(QRectF(x, row_y - 1, label_w - 8, row_h), Qt.AlignRight | Qt.AlignVCenter, label)
+
+            bg_rect = QRectF(bar_x, row_y + 4, bar_w, 6)
+            painter.setPen(Qt.NoPen)
+            painter.setBrush(QColor(self._colors['chip_bg']))
+            painter.drawRoundedRect(bg_rect, 3, 3)
+
+            fill_rect = QRectF(bar_x, row_y + 4, max(3, bar_w * ratio), 6)
+            painter.setBrush(self._heat_color(count))
+            painter.drawRoundedRect(fill_rect, 3, 3)
+
+            painter.setPen(QColor(self._colors['muted']))
+            painter.drawText(QRectF(bar_x + bar_w + 8, row_y - 1, value_w, row_h), Qt.AlignLeft | Qt.AlignVCenter, f'{count:,}')
 
     def _draw_empty_state(self, painter: QPainter, keyboard_rect: QRectF):
         box = keyboard_rect.adjusted(40, keyboard_rect.height() * 0.30, -40, -keyboard_rect.height() * 0.30)
-        painter.setPen(QPen(QColor('#CBD5E1'), 1))
-        painter.setBrush(QColor(255, 255, 255, 228))
+        painter.setPen(QPen(QColor(self._colors['border']), 1))
+        bg = QColor(self._colors['empty_bg'])
+        bg.setAlpha(232)
+        painter.setBrush(bg)
         painter.drawRoundedRect(box, 14, 14)
-        painter.setPen(QColor('#64748B'))
+        painter.setPen(QColor(self._colors['muted']))
         painter.setFont(QFont('Segoe UI', 11, QFont.Bold))
         painter.drawText(box, Qt.AlignCenter, '该时间范围暂无按键热力数据')
 

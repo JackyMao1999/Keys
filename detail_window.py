@@ -7,98 +7,66 @@ from PyQt5.QtCore import Qt, QTimer, QDate
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget,
     QTableWidgetItem, QHeaderView, QFrame, QSplitter, QGridLayout,
-    QPushButton, QDateEdit
+    QPushButton, QDateEdit, QComboBox
 )
 
 import config
+import settings
 from keyboard_heatmap import KeyboardHeatmap
 
 
-STYLESHEET = """
-QWidget {
-    background-color: #EEF2F7;
-    font-family: "Segoe UI", "Noto Sans", "Ubuntu", sans-serif;
-    color: #0F172A;
+THEME_OPTIONS = {'light': '浅色', 'dark': '深色', 'blue': '蓝色', 'green': '绿色'}
+
+THEMES = {
+    'light': {'window': '#EEF2F7', 'panel': '#FFFFFF', 'panel_alt': '#F8FAFC', 'text': '#0F172A', 'muted': '#64748B', 'border': '#E2E8F0', 'button_border': '#CBD5E1', 'primary': '#3B82F6', 'primary_dark': '#2563EB', 'selected': '#EFF6FF', 'card_hover': '#F8FBFF'},
+    'dark': {'window': '#0B1120', 'panel': '#111827', 'panel_alt': '#1E293B', 'text': '#F8FAFC', 'muted': '#94A3B8', 'border': '#334155', 'button_border': '#475569', 'primary': '#60A5FA', 'primary_dark': '#3B82F6', 'selected': '#1E3A8A', 'card_hover': '#172033'},
+    'blue': {'window': '#EAF3FF', 'panel': '#FFFFFF', 'panel_alt': '#F0F7FF', 'text': '#0F2A43', 'muted': '#52708D', 'border': '#CFE4FF', 'button_border': '#A9CDF5', 'primary': '#1677FF', 'primary_dark': '#0958D9', 'selected': '#E6F4FF', 'card_hover': '#F5FAFF'},
+    'green': {'window': '#ECFDF5', 'panel': '#FFFFFF', 'panel_alt': '#F0FDF4', 'text': '#052E16', 'muted': '#4B755D', 'border': '#BBF7D0', 'button_border': '#86EFAC', 'primary': '#16A34A', 'primary_dark': '#15803D', 'selected': '#DCFCE7', 'card_hover': '#F7FFF9'},
 }
 
-QLabel {
-    background: transparent;
-}
 
-QFrame#topBar, QFrame#leftPanel, QFrame#heatmapPanel {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 16px;
-}
-
-QFrame#statCard {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 14px;
-}
-QFrame#statCard:hover {
-    border-color: #93C5FD;
-    background: #F8FBFF;
-}
-
-QPushButton {
-    background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    padding: 6px 12px;
-    color: #334155;
-    font-size: 12px;
-}
-QPushButton:hover {
-    border-color: #3B82F6;
-    color: #2563EB;
-    background: #F8FAFC;
-}
-QPushButton:checked, QPushButton:pressed {
-    background: #3B82F6;
-    border-color: #3B82F6;
-    color: white;
-}
-
-QDateEdit {
-    background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    border-radius: 8px;
-    padding: 5px 9px;
-    color: #1E293B;
-    font-size: 12px;
-}
-QDateEdit:hover {
-    border-color: #3B82F6;
-}
-
-QTableWidget {
-    background: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    gridline-color: #F1F5F9;
-    font-size: 12px;
-    selection-background-color: #EFF6FF;
-}
-QTableWidget::item {
-    padding: 5px 8px;
-}
-QTableWidget::item:selected {
-    background: #EFF6FF;
-    color: #0F172A;
-}
-QHeaderView::section {
-    background: #F8FAFC;
-    border: none;
-    border-bottom: 1px solid #E2E8F0;
-    padding: 7px 8px;
-    font-weight: 700;
-    color: #64748B;
-}
-
-QSplitter::handle {
-    background: transparent;
-}
+def build_stylesheet(theme_name: str) -> str:
+    c = THEMES.get(theme_name, THEMES['light'])
+    return f"""
+QWidget {{ background-color: {c['window']}; font-family: "Segoe UI", "Noto Sans", "Ubuntu", sans-serif; color: {c['text']}; }}
+QLabel {{ background: transparent; }}
+QFrame#topBar, QFrame#leftPanel, QFrame#heatmapPanel {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 16px; }}
+QFrame#statCard {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 14px; }}
+QFrame#statCard:hover {{ border-color: {c['primary']}; background: {c['card_hover']}; }}
+QPushButton {{ background: {c['panel']}; border: 1px solid {c['button_border']}; border-radius: 8px; padding: 6px 12px; color: {c['text']}; font-size: 12px; }}
+QPushButton:hover {{ border-color: {c['primary']}; color: {c['primary']}; background: {c['panel_alt']}; }}
+QPushButton:checked, QPushButton:pressed {{ background: {c['primary']}; border-color: {c['primary']}; color: white; }}
+QDateEdit, QComboBox {{ background: {c['panel']}; border: 1px solid {c['button_border']}; border-radius: 10px; padding: 6px 30px 6px 10px; color: {c['text']}; font-size: 12px; min-height: 20px; }}
+QDateEdit:hover, QComboBox:hover {{ border-color: {c['primary']}; background: {c['panel_alt']}; }}
+QDateEdit:focus, QComboBox:focus {{ border: 1px solid {c['primary']}; }}
+QComboBox::drop-down, QDateEdit::drop-down {{ subcontrol-origin: padding; subcontrol-position: top right; width: 26px; border-left: 1px solid {c['border']}; border-top-right-radius: 9px; border-bottom-right-radius: 9px; background: {c['panel_alt']}; }}
+QComboBox::down-arrow, QDateEdit::down-arrow {{ width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid {c['muted']}; margin-right: 8px; }}
+QComboBox QAbstractItemView {{ background: {c['panel']}; color: {c['text']}; border: 1px solid {c['border']}; border-radius: 10px; padding: 6px; outline: none; selection-background-color: {c['selected']}; }}
+QComboBox QAbstractItemView::item {{ min-height: 26px; padding: 6px 10px; border-radius: 6px; }}
+QComboBox QAbstractItemView::item:hover {{ background: {c['panel_alt']}; color: {c['primary']}; }}
+QComboBox QAbstractItemView::item:selected {{ background: {c['selected']}; color: {c['primary']}; }}
+QCalendarWidget QWidget {{ alternate-background-color: {c['panel_alt']}; }}
+QCalendarWidget QToolButton {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 8px; color: {c['text']}; margin: 2px; padding: 5px 8px; }}
+QCalendarWidget QToolButton:hover {{ background: {c['panel_alt']}; color: {c['primary']}; border-color: {c['primary']}; }}
+QCalendarWidget QMenu {{ background: {c['panel']}; color: {c['text']}; border: 1px solid {c['border']}; border-radius: 8px; }}
+QCalendarWidget QSpinBox {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 8px; padding: 4px 8px; color: {c['text']}; }}
+QCalendarWidget QAbstractItemView {{ background: {c['panel']}; color: {c['text']}; border: none; selection-background-color: {c['primary']}; selection-color: white; outline: none; }}
+QCalendarWidget QAbstractItemView:enabled {{ alternate-background-color: {c['panel_alt']}; }}
+QTableWidget {{ background: {c['panel']}; border: 1px solid {c['border']}; border-radius: 12px; gridline-color: {c['border']}; font-size: 12px; selection-background-color: {c['selected']}; }}
+QTableWidget::item {{ padding: 5px 8px; }}
+QTableWidget::item:selected {{ background: {c['selected']}; color: {c['text']}; }}
+QHeaderView::section {{ background: {c['panel_alt']}; border: none; border-bottom: 1px solid {c['border']}; padding: 7px 8px; font-weight: 700; color: {c['muted']}; }}
+QScrollBar:vertical {{ background: transparent; width: 8px; margin: 4px 2px 4px 2px; }}
+QScrollBar::handle:vertical {{ background: {c['button_border']}; border-radius: 4px; min-height: 28px; }}
+QScrollBar::handle:vertical:hover {{ background: {c['primary']}; }}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; background: transparent; }}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: transparent; }}
+QScrollBar:horizontal {{ background: transparent; height: 8px; margin: 2px 4px 2px 4px; }}
+QScrollBar::handle:horizontal {{ background: {c['button_border']}; border-radius: 4px; min-width: 28px; }}
+QScrollBar::handle:horizontal:hover {{ background: {c['primary']}; }}
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; background: transparent; }}
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: transparent; }}
+QSplitter::handle {{ background: transparent; }}
 """
 
 
@@ -128,6 +96,10 @@ class StatCard(QFrame):
     def set_value(self, text: str):
         self.value.setText(text)
 
+    def set_theme(self, theme: dict):
+        self.label.setStyleSheet(f"background: transparent; color: {theme['muted']}; font-size: 12px; font-weight: 600;")
+        self.value.setStyleSheet(f"background: transparent; color: {self.accent}; font-size: 21px; font-weight: 800;")
+
 
 class DetailWindow(QWidget):
     """详细统计面板。"""
@@ -138,13 +110,16 @@ class DetailWindow(QWidget):
         self.db = db
         self.current_start = date.today()
         self.current_end = date.today()
+        self.current_theme = settings.get_theme()
+        if self.current_theme not in THEMES:
+            self.current_theme = 'light'
 
         self.setWindowTitle(config.APP_NAME)
-        self.setMinimumSize(1120, 640)
+        self.setFixedSize(1200, 720)
         self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint | Qt.WindowStaysOnTopHint)
-        self.setStyleSheet(STYLESHEET)
 
         self._init_ui()
+        self._apply_theme(save=False)
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self._update_display)
@@ -177,11 +152,9 @@ class DetailWindow(QWidget):
 
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
-        title = QLabel('KeyMouse Stats')
-        title.setStyleSheet('background: transparent; font-size: 22px; font-weight: 900; color: #0F172A;')
+        self.main_title = QLabel('KeyMouse Stats')
         self.range_title = QLabel('今日统计')
-        self.range_title.setStyleSheet('background: transparent; color: #64748B; font-size: 12px;')
-        title_box.addWidget(title)
+        title_box.addWidget(self.main_title)
         title_box.addWidget(self.range_title)
         layout.addLayout(title_box)
         layout.addStretch()
@@ -191,10 +164,20 @@ class DetailWindow(QWidget):
             ('昨天', self._select_yesterday),
             ('最近7天', self._select_recent_7_days),
             ('本月', self._select_this_month),
+            ('今年', self._select_this_year),
         ]:
             btn = QPushButton(text)
             btn.clicked.connect(handler)
             layout.addWidget(btn)
+
+        layout.addWidget(QLabel('主题'))
+        self.theme_combo = QComboBox()
+        self.theme_combo.setFixedWidth(82)
+        for key, label in THEME_OPTIONS.items():
+            self.theme_combo.addItem(label, key)
+        self.theme_combo.setCurrentIndex(max(0, self.theme_combo.findData(self.current_theme)))
+        self.theme_combo.currentIndexChanged.connect(self._on_theme_changed)
+        layout.addWidget(self.theme_combo)
 
         self.start_edit = QDateEdit()
         self.end_edit = QDateEdit()
@@ -220,9 +203,8 @@ class DetailWindow(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        section = QLabel('统计总览')
-        section.setStyleSheet('background: transparent; color: #334155; font-size: 15px; font-weight: 800;')
-        layout.addWidget(section)
+        self.overview_title = QLabel('统计总览')
+        layout.addWidget(self.overview_title)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -241,9 +223,8 @@ class DetailWindow(QWidget):
             grid.addWidget(card, i // 2, i % 2)
         layout.addLayout(grid)
 
-        table_title = QLabel('每日明细')
-        table_title.setStyleSheet('background: transparent; color: #334155; font-size: 15px; font-weight: 800;')
-        layout.addWidget(table_title)
+        self.table_title = QLabel('每日明细')
+        layout.addWidget(self.table_title)
 
         self.history_table = QTableWidget()
         self.history_table.setColumnCount(6)
@@ -265,6 +246,36 @@ class DetailWindow(QWidget):
         layout.addWidget(self.heatmap)
         return panel
 
+    def _on_theme_changed(self, index=None):
+        theme_name = self.theme_combo.currentData()
+        if theme_name and theme_name != self.current_theme:
+            self.current_theme = theme_name
+            self._apply_theme(save=True)
+
+    def _apply_theme(self, save: bool = True):
+        theme = THEMES.get(self.current_theme, THEMES['light'])
+        self.setStyleSheet(build_stylesheet(self.current_theme))
+        if save:
+            settings.set_theme(self.current_theme)
+
+        if hasattr(self, 'main_title'):
+            self.main_title.setStyleSheet(
+                f"background: transparent; font-size: 22px; font-weight: 900; color: {theme['text']};"
+            )
+            self.range_title.setStyleSheet(
+                f"background: transparent; color: {theme['muted']}; font-size: 12px;"
+            )
+            self.overview_title.setStyleSheet(
+                f"background: transparent; color: {theme['text']}; font-size: 15px; font-weight: 800;"
+            )
+            self.table_title.setStyleSheet(
+                f"background: transparent; color: {theme['text']}; font-size: 15px; font-weight: 800;"
+            )
+            for card in self.cards.values():
+                card.set_theme(theme)
+            if hasattr(self.heatmap, 'set_theme'):
+                self.heatmap.set_theme(self.current_theme)
+
     def _select_today(self):
         today = date.today()
         self._set_range(today, today)
@@ -280,6 +291,10 @@ class DetailWindow(QWidget):
     def _select_this_month(self):
         today = date.today()
         self._set_range(today.replace(day=1), today)
+
+    def _select_this_year(self):
+        today = date.today()
+        self._set_range(today.replace(month=1, day=1), today)
 
     def _select_custom_range(self):
         start = self.start_edit.date().toPyDate()
