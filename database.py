@@ -199,6 +199,17 @@ class Database:
             rows = cursor.fetchall()
             return {row['key_name']: row['press_count'] for row in rows}
 
+    def get_date_bounds(self) -> Dict:
+        """获取数据库中已有记录的最早和最晚日期。"""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT MIN(date) AS start_date, MAX(date) AS end_date
+                FROM daily_stats
+            """)
+            row = cursor.fetchone()
+            return dict(row) if row else {'start_date': None, 'end_date': None}
+
     def ensure_today_record(self):
         """确保今日记录存在"""
         self.get_today_stats()

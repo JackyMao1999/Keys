@@ -8,6 +8,8 @@ import os
 SETTINGS_PATH = os.path.expanduser("~/.config/keymouse-stats/settings.json")
 DEFAULT_SETTINGS = {
     "theme": "light",
+    "notifications_enabled": True,
+    "notification_threshold": 1880,
 }
 
 
@@ -52,3 +54,25 @@ def set_theme(theme_name: str):
     settings = load_settings()
     settings["theme"] = theme_name
     save_settings(settings)
+
+
+def get_notifications_enabled() -> bool:
+    """获取是否启用通知提醒。"""
+    return bool(load_settings().get("notifications_enabled", True))
+
+
+def get_notification_threshold() -> int:
+    """获取通知提醒阈值。"""
+    try:
+        threshold = int(load_settings().get("notification_threshold", 1880))
+    except (TypeError, ValueError):
+        threshold = 1880
+    return max(1, threshold)
+
+
+def set_notification_settings(enabled: bool, threshold: int):
+    """设置并保存通知提醒配置。"""
+    current = load_settings()
+    current["notifications_enabled"] = bool(enabled)
+    current["notification_threshold"] = max(1, int(threshold))
+    save_settings(current)

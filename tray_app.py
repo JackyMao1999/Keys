@@ -34,6 +34,7 @@ class TrayApp:
 
         # 创建详情窗口
         self.detail_window = DetailWindow(tracker, db)
+        self.tracker.set_notification_callback(self._show_keyboard_notification)
 
         # 托盘点击事件
         self.tray_icon.activated.connect(self._on_tray_activated)
@@ -171,6 +172,17 @@ class TrayApp:
         self.detail_window.show()
         self.detail_window.raise_()
         self.detail_window.activateWindow()
+
+    def _show_keyboard_notification(self, reached_count: int):
+        """显示键盘敲击里程碑通知"""
+        if not self.tray_icon.supportsMessages():
+            return
+        self.tray_icon.showMessage(
+            config.APP_NAME,
+            f"今日键盘敲击已达到 {reached_count:,} 次",
+            QSystemTrayIcon.Information,
+            5000
+        )
 
     def _show_about(self):
         """显示关于对话框"""

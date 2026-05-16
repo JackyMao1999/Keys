@@ -3,16 +3,17 @@
 """
 from datetime import date, timedelta
 
-from PyQt5.QtCore import Qt, QTimer, QDate
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTableWidget,
     QTableWidgetItem, QHeaderView, QFrame, QSplitter, QGridLayout,
-    QPushButton, QDateEdit, QComboBox
+    QPushButton
 )
 
 import config
 import settings
 from keyboard_heatmap import KeyboardHeatmap
+from settings_dialog import SettingsDialog
 
 
 THEME_OPTIONS = {
@@ -180,35 +181,15 @@ class DetailWindow(QWidget):
             ('最近7天', self._select_recent_7_days),
             ('本月', self._select_this_month),
             ('今年', self._select_this_year),
+            ('所有', self._select_all),
         ]:
             btn = QPushButton(text)
             btn.clicked.connect(handler)
             layout.addWidget(btn)
 
-        layout.addWidget(QLabel('主题'))
-        self.theme_combo = QComboBox()
-        self.theme_combo.setFixedWidth(94)
-        for key, label in THEME_OPTIONS.items():
-            self.theme_combo.addItem(label, key)
-        self.theme_combo.setCurrentIndex(max(0, self.theme_combo.findData(self.current_theme)))
-        self.theme_combo.currentIndexChanged.connect(self._on_theme_changed)
-        layout.addWidget(self.theme_combo)
-
-        self.start_edit = QDateEdit()
-        self.end_edit = QDateEdit()
-        for edit in (self.start_edit, self.end_edit):
-            edit.setCalendarPopup(True)
-            edit.setDisplayFormat('yyyy-MM-dd')
-            edit.setDate(QDate.currentDate())
-
-        layout.addWidget(QLabel('从'))
-        layout.addWidget(self.start_edit)
-        layout.addWidget(QLabel('到'))
-        layout.addWidget(self.end_edit)
-
-        query_btn = QPushButton('查询')
-        query_btn.clicked.connect(self._select_custom_range)
-        layout.addWidget(query_btn)
+        settings_btn = QPushButton('设置')
+        settings_btn.clicked.connect(self._show_settings)
+        layout.addWidget(settings_btn)
         return bar
 
     def _create_left_panel(self) -> QFrame:
@@ -261,12 +242,6 @@ class DetailWindow(QWidget):
         layout.addWidget(self.heatmap)
         return panel
 
-    def _on_theme_changed(self, index=None):
-        theme_name = self.theme_combo.currentData()
-        if theme_name and theme_name != self.current_theme:
-            self.current_theme = theme_name
-            self._apply_theme(save=True)
-
     def _apply_theme(self, save: bool = True):
         theme = THEMES.get(self.current_theme, THEMES['light'])
         self.setStyleSheet(build_stylesheet(self.current_theme))
@@ -291,6 +266,18 @@ class DetailWindow(QWidget):
             if hasattr(self.heatmap, 'set_theme'):
                 self.heatmap.set_theme(self.current_theme)
 
+    def _show_settings(self):
+        dialog = SettingsDialog(self)
+        if dialog.exec_():
+            self.current_theme = settings.get_theme()
+            if self.current_theme not in THEMES:
+                self.current_theme = 'light'
+            self._apply_theme(save=False)
+            self.tracker.configure_notifications(
+                settings.get_notifications_enabled(),
+                settings.get_notification_threshold()
+            )
+
     def _select_today(self):
         today = date.today()
         self._set_range(today, today)
@@ -311,18 +298,19 @@ class DetailWindow(QWidget):
         today = date.today()
         self._set_range(today.replace(month=1, day=1), today)
 
-    def _select_custom_range(self):
-        start = self.start_edit.date().toPyDate()
-        end = self.end_edit.date().toPyDate()
-        if start > end:
-            start, end = end, start
-        self._set_range(start, end)
+    def _select_all(self):
+        today = date.today()
+        bounds = self.db.get_date_bounds()
+        start_text = bounds.get('start_date')
+        try:
+            start = date.fromisoformat(start_text) if start_text else today
+        except ValueError:
+            start = today
+        self._set_range(start, today)
 
     def _set_range(self, start: date, end: date):
         self.current_start = start
         self.current_end = end
-        self.start_edit.setDate(QDate(start.year, start.month, start.day))
-        self.end_edit.setDate(QDate(end.year, end.month, end.day))
         self._refresh_current_range(force=True)
 
     def _update_display(self):

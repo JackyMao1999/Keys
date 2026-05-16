@@ -6,6 +6,7 @@ from pynput import keyboard, mouse
 from pynput.keyboard import Key, KeyCode
 from typing import Optional
 import config
+import settings
 
 
 class StatsTracker:
@@ -16,9 +17,10 @@ class StatsTracker:
     # 每 N 次按键批量更新总按键数
     TOTAL_KEY_FLUSH_INTERVAL = 10
 
-    def __init__(self, db, on_update_callback=None):
+    def __init__(self, db, on_update_callback=None, on_notification_callback=None):
         self.db = db
         self.on_update_callback = on_update_callback
+        self.on_notification_callback = on_notification_callback
 
         # 状态追踪
         self._key_presses = 0
@@ -32,6 +34,11 @@ class StatsTracker:
         self._key_detail_pending = {}  # 待写入DB的增量
         self._key_detail_since_flush = 0
 
+        # 通知提醒配置
+        self._notifications_enabled = settings.get_notifications_enabled()
+        self._notification_threshold = settings.get_notification_threshold()
+        self._last_notification_milestone = 0
+
         # 鼠标位置追踪
         self._last_mouse_x = None
         self._last_mouse_y = None
@@ -42,6 +49,7 @@ class StatsTracker:
 
         # 加载今日数据
         self._load_today_data()
+        self._last_notification_milestone = self._key_presses // self._notification_threshold
 
     def _load_today_data(self):
         """从数据库加载今日数据"""
@@ -64,12 +72,46 @@ class StatsTracker:
         """将 pynput key 对象归一化为字符串标识符"""
         try:
             if hasattr(key, 'char') and key.char:
-                return key.char.lower()
+                char = key.char
+                if len(char) == 1:
+                    code = ord(char)
+                    # Ctrl+A 至 Ctrl+Z 在 pynput 中可能表现为控制字符 \x01-\x1a。
+                    if 1 <= code <= 26:
+                        return chr(ord('a') + code - 1)
+                    if char in ('\r', '\n'):
+                        return 'enter'
+                    if char == '\t':
+                        return 'tab'
+                    if char == '\x1b':
+                        return 'esc'
+                    if char == '\x7f':
+                        return 'backspace'
+                return char.lower()
             elif hasattr(key, 'name') and key.name:
                 return key.name.lower()
         except Exception:
             pass
         return str(key).lower()
+
+    def configure_notifications(self, enabled: bool, threshold: int):
+        """更新提醒配置。"""
+        self._notifications_enabled = bool(enabled)
+        self._notification_threshold = max(1, int(threshold))
+        self._last_notification_milestone = self._key_presses // self._notification_threshold
+
+    def set_notification_callback(self, callback):
+        """设置通知回调。"""
+        self.on_notification_callback = callback
+
+    def _check_keyboard_notification(self):
+        """键盘敲击跨过提醒阈值时触发通知。"""
+        if not self._notifications_enabled or not self.on_notification_callback:
+            return
+        milestone = self._key_presses // self._notification_threshold
+        if milestone > self._last_notification_milestone:
+            self._last_notification_milestone = milestone
+            reached = milestone * self._notification_threshold
+            self.on_notification_callback(reached)
 
     def _on_key_press(self, key):
         """键盘按键回调"""
@@ -88,6 +130,7 @@ class StatsTracker:
             # 批量更新数据库 (每10次更新一次，减少IO)
             if self._key_presses % self.TOTAL_KEY_FLUSH_INTERVAL == 0:
                 self.db.update_stats(key_presses=self.TOTAL_KEY_FLUSH_INTERVAL)
+            self._check_keyboard_notification()
             self._notify_update()
 
     def _on_key_release(self, key):
