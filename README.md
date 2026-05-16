@@ -32,6 +32,15 @@ sudo dnf install python3-pyqt5
 # 直接运行
 python3 main.py
 
+# 强制命令行模式
+python3 main.py --cli
+
+# 强制 GUI 模式（托盘 + 后台统计）
+python3 main.py --gui
+
+# 仅打开 GUI 详情面板，使用真实数据调试界面
+python3 main.py --gui-only
+
 # 或添加执行权限后运行
 chmod +x main.py
 ./main.py

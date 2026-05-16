@@ -12,6 +12,11 @@ THEME_COLORS = {
     'dark': {'text': '#F8FAFC', 'muted': '#94A3B8', 'panel': '#1E293B', 'border': '#334155', 'key': '#111827', 'key_border': '#475569', 'hover': '#60A5FA', 'chip_bg': '#1E3A8A', 'chip_border': '#2563EB', 'chip_text': '#DBEAFE', 'empty_bg': '#111827'},
     'blue': {'text': '#0F2A43', 'muted': '#52708D', 'panel': '#F0F7FF', 'border': '#CFE4FF', 'key': '#FFFFFF', 'key_border': '#BBD7F5', 'hover': '#1677FF', 'chip_bg': '#E6F4FF', 'chip_border': '#BAE0FF', 'chip_text': '#0958D9', 'empty_bg': '#FFFFFF'},
     'green': {'text': '#052E16', 'muted': '#4B755D', 'panel': '#F0FDF4', 'border': '#BBF7D0', 'key': '#FFFFFF', 'key_border': '#86EFAC', 'hover': '#16A34A', 'chip_bg': '#DCFCE7', 'chip_border': '#86EFAC', 'chip_text': '#166534', 'empty_bg': '#FFFFFF'},
+    'mint': {'text': '#123C35', 'muted': '#5B8178', 'panel': '#F2FBF7', 'border': '#C8F0E1', 'key': '#FFFFFF', 'key_border': '#9EE6D0', 'hover': '#14B8A6', 'chip_bg': '#CCFBF1', 'chip_border': '#99F6E4', 'chip_text': '#0F766E', 'empty_bg': '#FFFFFF'},
+    'aqua': {'text': '#123A47', 'muted': '#557887', 'panel': '#F0FDFF', 'border': '#BAE6FD', 'key': '#FFFFFF', 'key_border': '#7DD3FC', 'hover': '#0891B2', 'chip_bg': '#CFFAFE', 'chip_border': '#67E8F9', 'chip_text': '#0E7490', 'empty_bg': '#FFFFFF'},
+    'lavender': {'text': '#32204D', 'muted': '#74658F', 'panel': '#FAF7FF', 'border': '#E9D5FF', 'key': '#FFFFFF', 'key_border': '#D8B4FE', 'hover': '#8B5CF6', 'chip_bg': '#EDE9FE', 'chip_border': '#DDD6FE', 'chip_text': '#6D28D9', 'empty_bg': '#FFFFFF'},
+    'peach': {'text': '#4A2A16', 'muted': '#8A6752', 'panel': '#FFF9F2', 'border': '#FED7AA', 'key': '#FFFFFF', 'key_border': '#FDBA74', 'hover': '#F97316', 'chip_bg': '#FFEDD5', 'chip_border': '#FED7AA', 'chip_text': '#C2410C', 'empty_bg': '#FFFFFF'},
+    'cream': {'text': '#3F3718', 'muted': '#7E7350', 'panel': '#FFFDEA', 'border': '#FDE68A', 'key': '#FFFFFF', 'key_border': '#FACC15', 'hover': '#CA8A04', 'chip_bg': '#FEF3C7', 'chip_border': '#FDE68A', 'chip_text': '#92400E', 'empty_bg': '#FFFFFF'},
 }
 
 

@@ -186,6 +186,32 @@ class Application:
             self.shutdown()
             sys.exit(1)
 
+    def run_gui_only(self):
+        """仅启动详情面板，用真实数据调试界面。"""
+        try:
+            if not check_display_available():
+                print("无法启动 GUI-only 模式：未检测到可用图形界面")
+                sys.exit(1)
+
+            self.db.ensure_today_record()
+
+            from PyQt5.QtWidgets import QApplication
+            from detail_window import DetailWindow
+
+            qt_app = QApplication(sys.argv)
+            qt_app.setApplicationName(config.APP_NAME)
+            qt_app.setApplicationVersion(config.APP_VERSION)
+
+            window = DetailWindow(self.tracker, self.db)
+            window.show()
+            qt_app.exec_()
+        except KeyboardInterrupt:
+            sys.exit(0)
+        except Exception as e:
+            print(f"GUI-only 模式错误: {e}")
+            traceback.print_exc()
+            sys.exit(1)
+
 
 def main():
     """主函数"""
@@ -194,7 +220,14 @@ def main():
                         help='强制使用命令行模式（无GUI）')
     parser.add_argument('--gui', action='store_true',
                         help='强制使用GUI模式')
+    parser.add_argument('--gui-only', action='store_true',
+                        help='仅打开GUI详情面板，使用真实数据但不启动托盘和输入监听')
     args = parser.parse_args()
+
+    if args.gui_only:
+        app = Application(cli_mode=False)
+        app.run_gui_only()
+        return
 
     cli_mode = args.cli
     if args.gui:

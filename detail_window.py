@@ -15,13 +15,28 @@ import settings
 from keyboard_heatmap import KeyboardHeatmap
 
 
-THEME_OPTIONS = {'light': '浅色', 'dark': '深色', 'blue': '蓝色', 'green': '绿色'}
+THEME_OPTIONS = {
+    'light': '浅色',
+    'dark': '深色',
+    'blue': '蓝色',
+    'green': '绿色',
+    'mint': '薄荷',
+    'aqua': '湖水',
+    'lavender': '薰衣草',
+    'peach': '蜜桃',
+    'cream': '奶油',
+}
 
 THEMES = {
     'light': {'window': '#EEF2F7', 'panel': '#FFFFFF', 'panel_alt': '#F8FAFC', 'text': '#0F172A', 'muted': '#64748B', 'border': '#E2E8F0', 'button_border': '#CBD5E1', 'primary': '#3B82F6', 'primary_dark': '#2563EB', 'selected': '#EFF6FF', 'card_hover': '#F8FBFF'},
     'dark': {'window': '#0B1120', 'panel': '#111827', 'panel_alt': '#1E293B', 'text': '#F8FAFC', 'muted': '#94A3B8', 'border': '#334155', 'button_border': '#475569', 'primary': '#60A5FA', 'primary_dark': '#3B82F6', 'selected': '#1E3A8A', 'card_hover': '#172033'},
     'blue': {'window': '#EAF3FF', 'panel': '#FFFFFF', 'panel_alt': '#F0F7FF', 'text': '#0F2A43', 'muted': '#52708D', 'border': '#CFE4FF', 'button_border': '#A9CDF5', 'primary': '#1677FF', 'primary_dark': '#0958D9', 'selected': '#E6F4FF', 'card_hover': '#F5FAFF'},
     'green': {'window': '#ECFDF5', 'panel': '#FFFFFF', 'panel_alt': '#F0FDF4', 'text': '#052E16', 'muted': '#4B755D', 'border': '#BBF7D0', 'button_border': '#86EFAC', 'primary': '#16A34A', 'primary_dark': '#15803D', 'selected': '#DCFCE7', 'card_hover': '#F7FFF9'},
+    'mint': {'window': '#EFFCF8', 'panel': '#FFFFFF', 'panel_alt': '#F2FBF7', 'text': '#123C35', 'muted': '#5B8178', 'border': '#C8F0E1', 'button_border': '#9EE6D0', 'primary': '#14B8A6', 'primary_dark': '#0F766E', 'selected': '#CCFBF1', 'card_hover': '#F8FFFC'},
+    'aqua': {'window': '#ECFEFF', 'panel': '#FFFFFF', 'panel_alt': '#F0FDFF', 'text': '#123A47', 'muted': '#557887', 'border': '#BAE6FD', 'button_border': '#7DD3FC', 'primary': '#0891B2', 'primary_dark': '#0E7490', 'selected': '#CFFAFE', 'card_hover': '#F6FDFF'},
+    'lavender': {'window': '#F7F3FF', 'panel': '#FFFFFF', 'panel_alt': '#FAF7FF', 'text': '#32204D', 'muted': '#74658F', 'border': '#E9D5FF', 'button_border': '#D8B4FE', 'primary': '#8B5CF6', 'primary_dark': '#7C3AED', 'selected': '#EDE9FE', 'card_hover': '#FCFAFF'},
+    'peach': {'window': '#FFF7ED', 'panel': '#FFFFFF', 'panel_alt': '#FFF9F2', 'text': '#4A2A16', 'muted': '#8A6752', 'border': '#FED7AA', 'button_border': '#FDBA74', 'primary': '#F97316', 'primary_dark': '#EA580C', 'selected': '#FFEDD5', 'card_hover': '#FFFBF6'},
+    'cream': {'window': '#FEFCE8', 'panel': '#FFFFFF', 'panel_alt': '#FFFDEA', 'text': '#3F3718', 'muted': '#7E7350', 'border': '#FDE68A', 'button_border': '#FACC15', 'primary': '#CA8A04', 'primary_dark': '#A16207', 'selected': '#FEF3C7', 'card_hover': '#FFFFF2'},
 }
 
 
@@ -172,7 +187,7 @@ class DetailWindow(QWidget):
 
         layout.addWidget(QLabel('主题'))
         self.theme_combo = QComboBox()
-        self.theme_combo.setFixedWidth(82)
+        self.theme_combo.setFixedWidth(94)
         for key, label in THEME_OPTIONS.items():
             self.theme_combo.addItem(label, key)
         self.theme_combo.setCurrentIndex(max(0, self.theme_combo.findData(self.current_theme)))
